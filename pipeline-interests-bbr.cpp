@@ -23,29 +23,31 @@
  * @author Klaus Schneider
  */
 
-#include "pipeline-interests-cubic.hpp"
+#include "pipeline-interests-bbr.hpp"
 
 #include <cmath>
 
 namespace ndn {
 namespace chunks {
 
-constexpr double CUBIC_C = 0.4;
+constexpr double HIGH_GAIN = 2.885;
+constexpr double LOW_GAIN = 0.3466;
 
-PipelineInterestsCubic::PipelineInterestsCubic(Face& face, RttEstimatorWithStats& rttEstimator,
+
+PipelineInterestsBBR::PipelineInterestsBBR(Face& face, RttEstimatorWithStats& rttEstimator,
                                                const Options& opts)
   : PipelineInterestsAdaptive(face, rttEstimator, opts)
   , m_lastDecrease(time::steady_clock::now())
 {
-  if (m_options.isVerbose) {
-    printOptions();
-    std::cerr << "\tCubic beta = " << m_options.cubicBeta << "\n"
-              << "\tFast convergence = " << (m_options.enableFastConv ? "yes" : "no") << "\n";
-  }
+  //if (m_options.isVerbose) {
+   // printOptions();
+    //std::cerr << "\tCubic beta = " << m_options.cubicBeta << "\n"
+     //         << "\tFast convergence = " << (m_options.enableFastConv ? "yes" : "no") << "\n";
+  //}
 }
 
 void
-PipelineInterestsCubic::increaseWindow()
+PipelineInterestsBBR::Startup()
 {
   // Slow start phase
   if (m_cwnd < m_ssthresh) {

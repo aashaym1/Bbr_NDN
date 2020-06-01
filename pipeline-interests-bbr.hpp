@@ -26,7 +26,7 @@
 #ifndef NDN_TOOLS_CHUNKS_CATCHUNKS_PIPELINE_INTERESTS_BBR_HPP
 #define NDN_TOOLS_CHUNKS_CATCHUNKS_PIPELINE_INTERESTS_BBR_HPP
 
-#include "pipeline-interests-adaptive.hpp"
+#include "pipeline-interests-adaptive-bbr.hpp"
 
 namespace ndn {
 namespace chunks {
