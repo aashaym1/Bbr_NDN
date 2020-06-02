@@ -33,7 +33,6 @@ namespace chunks {
 constexpr double HIGH_GAIN = 2.885;
 constexpr double LOW_GAIN = 0.3466;
 
-
 PipelineInterestsBBR::PipelineInterestsBBR(Face& face, RttEstimatorWithStats& rttEstimator,
                                                const Options& opts)
   : PipelineInterestsAdaptive(face, rttEstimator, opts)
@@ -48,70 +47,66 @@ PipelineInterestsBBR::PipelineInterestsBBR(Face& face, RttEstimatorWithStats& rt
 
 void
 PipelineInterestsBBR::Startup()
+{ 
+//To be Implemented 
+//if maxbw remains sasme for 3 consecutive ACKS 
 {
-  // Slow start phase
-  if (m_cwnd < m_ssthresh) {
-    m_cwnd += 1.0;
-  }
-  // Congestion avoidance phase
-  else {
-    // If wmax is still 0, set it to the current cwnd. Usually unnecessary,
-    // if m_ssthresh is large enough.
-    if (m_wmax < m_options.initCwnd) {
-      m_wmax = m_cwnd;
-    }
-
-    // 1. Time since last congestion event in seconds
-    const double t = (time::steady_clock::now() - m_lastDecrease).count() / 1e9;
-
-    // 2. Time it takes to increase the window to m_wmax = the cwnd right before the last
-    // window decrease.
-    // K = cubic_root(wmax*(1-beta_cubic)/C) (Eq. 2)
-    const double k = std::cbrt(m_wmax * (1 - m_options.cubicBeta) / CUBIC_C);
-
-    // 3. Target: W_cubic(t) = C*(t-K)^3 + wmax (Eq. 1)
-    const double wCubic = CUBIC_C * std::pow(t - k, 3) + m_wmax;
-
-    // 4. Estimate of Reno Increase (Eq. 4)
-    const double rtt = m_rttEstimator.getSmoothedRtt().count() / 1e9;
-    const double wEst = m_wmax * m_options.cubicBeta +
-                        (3 * (1 - m_options.cubicBeta) / (1 + m_options.cubicBeta)) * (t / rtt);
-
-    // Actual adaptation
-    double cubicIncrement = std::max(wCubic, wEst) - m_cwnd;
-    // Cubic increment must be positive
-    // Note: This change is not part of the RFC, but I added it to improve performance.
-    cubicIncrement = std::max(0.0, cubicIncrement);
-
-    m_cwnd += cubicIncrement / m_cwnd;
-  }
+m_options.phase=1;
+//goto the Drain Phase
+}
+else
+{
+m_cwnd=HIGH_GAIN*estiated_BDP;//here estimated BDP has to be replaced with the actual one
+m_options.pacing_rate=HIGH_GAIN*maxbw//here maxbw has to be substituted
+}  
 
   emitSignal(afterCwndChange, time::steady_clock::now() - getStartTime(), m_cwnd);
 }
 
 void
-PipelineInterestsCubic::decreaseWindow()
+PipelineInterestsCubic::Drain()
 {
-  // A flow remembers the last value of wmax,
-  // before it updates wmax for the current congestion event.
-
-  // Current wmax < last_wmax
-  if (m_options.enableFastConv && m_cwnd < m_lastWmax) {
-    m_lastWmax = m_cwnd;
-    m_wmax = m_cwnd * (1.0 + m_options.cubicBeta) / 2.0;
-  }
-  else {
-    // Save old cwnd as wmax
-    m_lastWmax = m_cwnd;
-    m_wmax = m_cwnd;
-  }
-
-  m_ssthresh = std::max(m_options.initCwnd, m_cwnd * m_options.cubicBeta);
-  m_cwnd = m_ssthresh;
-  m_lastDecrease = time::steady_clock::now();
-
+if(m_nInFlight>=estimated_BDP)//here estimated BDP is to be replaced
+{
+m_cwnd=HIGH_GAIN*estimated_BDP//here estimated BDP is to be replaced;
+m_options.pacing_rate=DRAIN_GAIN*maxbw//here maxbw has to be substituted
+}
+else 
+m_options.phase=2;
+//goto the probe BW phase
   emitSignal(afterCwndChange, time::steady_clock::now() - getStartTime(), m_cwnd);
 }
 
+void
+PipelineInterestsCubic::ProbeBw(int i)
+{
+double gain_array={1.25,0.75,1,1,1,1,1,1};
+//to be implemented
+m_cwnd=2*estimatedBDP//here estimated BDP is to be substituted
+m_options.pacing_rate=gain_array[i]*maxbw//here maximum bandwidth has to be substituted
+}
+
+void
+PipelineInterestsCubic::ProbeRtt()
+{
+//this phase to be entered every 10 seconds make these changes to the pipeline_interests-adaptive-bbr.hpp file
+m_cwnd=4;//get the estimate of min rtt, here
+m_cwnd=MIN(m_cwnd,4*segment_size);//here segment_size is to be substituted
+m_options.pacing_rate=maxbw//here maxbw to be substituted
+/*pacing_gain=cwnd_gain=1
+stay in this phase for atleast 200 ms
+m_cwnd=MAX(m_cwnd,prev_cwnd)//here previous cwnd to be substituted
+*/
+if(maxbw remains same)
+{
+m_options.phase=2;
+//goto probebw phase
+}
+else 
+{
+m_options.phase=0;
+//goto startup phase
+}
+}
 } // namespace chunks
 } // namespace ndn

@@ -117,29 +117,20 @@ protected:
   printOptions() const;
 
 private:
-  /**
-   * @brief Increase congestion window.
-   */
-  virtual void
-  increaseWindow() = 0;
-
-  /**
-   * @brief Decrease congestion window.
-   */
-  virtual void
-  decreaseWindow() = 0;
   virtual void
   Startup() =0;
+//go to the startup phase
 
   virtual void
   Drain() =0;
+//go to the Drain phase
   
   virtual void
   ProbeBw() =0;
-  
+//go to the Probe Bandwidth phase  
   virtual void
   ProbeRtt() =0;
-
+//go to the Probe RTT phase
 private:
   /**
    * @brief Fetch all the segments between 0 and lastSegment of the specified prefix.
