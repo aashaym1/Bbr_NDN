@@ -6,6 +6,7 @@ BBR is a bandwidth based queueing algorithm where instead of focusing on bandwid
 This was done to manage throughput and maintain a consistent throughput.
 A better explanation can be found here:
 https://cloud.google.com/blog/products/gcp/tcp-bbr-congestion-control-comes-to-gcp-your-internet-just-got-faster
+NDN
 This algorithm is implemented into NDN-chunks.
 NDN is a new network layer architechture to replace the IP layer of the current internet. 
 The motivation is to move to a CCN(Content centric network) based architechture. 
